@@ -1,0 +1,11 @@
+# Documentação OpenCV
+http://docs.opencv.org/3.3.0/
+
+# Stack Overflow
+https://stackoverflow.com/questions/tagged/opencv
+
+# Git Issue Tracking
+https://github.com/opencv/opencv/issues
+
+# Forum
+http://answers.opencv.org/questions/
