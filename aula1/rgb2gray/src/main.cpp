@@ -25,7 +25,19 @@ bool saveImage(char *path, Mat &img) {
 }
 
 void rgb2gray(Mat &src, Mat &dst) {
-  cvtColor(src, dst, COLOR_RGB2GRAY);
+
+  dst = src.clone();
+
+  MatIterator_<Vec3b> it = dst.begin<Vec3b>();
+  MatIterator_<Vec3b> end = dst.end<Vec3b>();
+
+  for (; it != end; ++it) {
+
+    int mean = ((*it)[0] + (*it)[1] + (*it)[2]) / 3;
+    (*it)[0] = mean;
+    (*it)[1] = mean;
+    (*it)[2] = mean;
+  }
 }
 
 void applyGain(Mat &src, Mat &dst, double gain) {
@@ -57,15 +69,15 @@ int main(int argc, char** argv) {
   namedWindow("Imagem Resultante", WINDOW_AUTOSIZE);
   imshow("Imagem Resultante", final);
 
-  bool process = true;
+  // Process keypress.
   double gain = 1.0;
+  bool process = true;
 
   while (process) {
     uint8_t key = static_cast<uint8_t>(waitKey(0));
 
     switch (key) {
-
-    // Process '+' character to increase gain.
+    // Use '+' character to increase gain.
     case 0x2B:
     case 0xAB:
       gain += 0.1;
@@ -73,7 +85,7 @@ int main(int argc, char** argv) {
       imshow("Imagem Resultante", final);
       break;
 
-      // Process '-' character to decrease gain.
+      // Use '-' character to decrease gain.
     case 0x2D:
     case 0xAD:
       gain -= +0.1;
@@ -81,19 +93,19 @@ int main(int argc, char** argv) {
       imshow("Imagem Resultante", final);
       break;
 
-      // Process escape character to exit.
+      // Use 'esc' key to exit.
       // Character 0xFF is returned when all windows are closed.
     case 0x1B:
     case 0xFF:
       process = false;
       break;
-    }
 
-    // Process 's' character to save the image.
+      // Press 's' to save the image.
     case 's':
-
-    break;
-
+      saveImage(argv[1], final);
+      break;
+    }
   }
+
   return 0;
 }
