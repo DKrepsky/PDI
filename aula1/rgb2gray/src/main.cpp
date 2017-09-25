@@ -40,9 +40,8 @@ void rgb2gray(Mat &src, Mat &dst) {
   }
 }
 
-void applyGain(Mat &src, Mat &dst, double gain) {
-
-  dst = src.mul(Scalar::all(gain));
+void applyGain(Mat &src, Mat &dst, int8_t gain) {
+  dst = src + Scalar(gain, gain, gain);
 }
 
 int main(int argc, char** argv) {
@@ -70,7 +69,7 @@ int main(int argc, char** argv) {
   imshow("Imagem Resultante", final);
 
   // Process keypress.
-  double gain = 1.0;
+  int8_t gain = 0;
   bool process = true;
 
   while (process) {
@@ -80,7 +79,9 @@ int main(int argc, char** argv) {
     // Use '+' character to increase gain.
     case 0x2B:
     case 0xAB:
-      gain += 0.1;
+      if (gain < 127)
+        gain += 1;
+
       applyGain(gray, final, gain);
       imshow("Imagem Resultante", final);
       break;
@@ -88,7 +89,9 @@ int main(int argc, char** argv) {
       // Use '-' character to decrease gain.
     case 0x2D:
     case 0xAD:
-      gain -= +0.1;
+      if (gain > -128)
+        gain -= 1;
+
       applyGain(gray, final, gain);
       imshow("Imagem Resultante", final);
       break;
