@@ -6,14 +6,14 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#include <stdio.h>
+#include <iostream>
 #include <opencv2/opencv.hpp>
 
 using namespace cv;
 
 int main(int argc, char** argv) {
 	if (argc != 2) {
-		printf("usage: DisplayImage.out <Image_Path>\n");
+		std::cout << "Informe o caminho da imagem" << std::endl;
 		return -1;
 	}
 
@@ -21,13 +21,38 @@ int main(int argc, char** argv) {
 	image = imread(argv[1], 1);
 
 	if (!image.data) {
-		printf("No image data \n");
+		std::cout << "Imagem invalida" << std::endl;
 		return -1;
 	}
+
 	namedWindow("Display Image", WINDOW_AUTOSIZE);
 	imshow("Display Image", image);
 
-	waitKey(0);
+	// Process keypress.
+	bool process = true;
 
-	return 0;
+	while (process) {
+		uint8_t key = static_cast<uint8_t>(waitKey(0));
+
+		switch (key) {
+		// Use '+' character to increase gain.
+		case 0x2B:
+		case 0xAB:
+			break;
+
+			// Use '-' character to decrease gain.
+		case 0x2D:
+		case 0xAD:
+			break;
+
+			// Use 'esc' key to exit.
+			// Character 0xFF is returned when all windows are closed.
+		case 0x1B:
+		case 0xFF:
+			process = false;
+			break;
+		}
+
+		return 0;
+	}
 }
