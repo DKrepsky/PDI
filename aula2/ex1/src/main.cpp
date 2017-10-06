@@ -61,7 +61,7 @@ Mat applyZoomIn(Mat &img) {
 }
 
 /*
- * Realiza a decimação da imagem em 4x (zoom out simples).
+ * Realiza a decimação da imagem em 4x (zoom out).
  *
  * A cada 2x2 pixels na imagem original, somente o primeiro é copiado para a
  * imagem reduzida, os outros pixels são descartados.
@@ -103,24 +103,18 @@ Mat applyZoomOut(Mat &img) {
 /*
  * Amplia uma imagem em 4x com interpolação linear.
  *
- * O valor de cada 2x2 pixels na imagem aumentada é iguar ao valor da média de
- * 2x2 pixels na imagem original.
+ * O zoom é aplicado em 4 etapas.
+ *  1- Calcula-se o valor do novo pixel na horizontal com base na média dos dos
+ *     pixels vizinhos, com exceção dos pixels na borda direita.
+ *     pixel(row, col + 1) = (pixel(row, col) + pixel(row, col + 2))/2
  *
- * Note que não é adicionado "padding" à imagem, assim, a última linha e última
- * coluna apresentam distorções.
+ *  2- Calcula-se o valor do novo pixel entre duas colunas já existentes, com
+ *     exceção dos pixels na borda inferior.
+ *     pixel(row + 1, col) = (pixel(row, col) + pixel(row + 2, col))/2
  *
- * Ex. para o pixel (0,0):
+ *  3- Clona-se o valor dos pixels na borda direita.
  *
- * Pixels com zoom = (135 + 148 + 186 + 155) / 4 = 156.
- *
- *    Original               Com Zoom In
- * -------------            -----------------
- * | 135 | 148 |            | 156 | 156 | ...
- * -------------     ->     -----------------
- * | 186 | 155 |            | 156 | 156 | ...
- * -------------            -----------------
- *           4x4            | ... | ... | ...
- *                                       8x8
+ *  4- Clona-se o valor dos pixels na borda inferior.
  */
 Mat applyZoomInLinear(Mat &img) {
   Mat result;
@@ -130,8 +124,8 @@ Mat applyZoomInLinear(Mat &img) {
 
   result.create(height * 2, width * 2, img.type());
 
-  // Horizontal
-  for (int row = 0; row < height - 1; row++) {
+  // Calcula o valor interpolado dos novos pixels na horizontal.
+  for (int row = 0; row < height; row++) {
     int y = 2 * row;
 
     for (int col = 0; col < width - 1; col++) {
@@ -146,7 +140,20 @@ Mat applyZoomInLinear(Mat &img) {
     }
   }
 
-  // Borda vertical direita.
+  // Calcula o valor interpolado dos novos pixels na vertical.
+  for (int row = 0; row < 2 * height - 2; row += 2) {
+
+    for (int col = 0; col < 2 * width; col++) {
+
+      Vec3b pixel = result.at<Vec3b>(row, col);
+      Vec3b nextPixel = result.at<Vec3b>(row + 2, col);
+      Vec3b meanPixel = pixel / 2 + nextPixel / 2;
+
+      result.at<Vec3b>(row + 1, col) = meanPixel;
+    }
+  }
+
+  // Clona os pixels na borda vertical direita.
   for (int row = 0; row < height; row++) {
     int y = 2 * row;
     Vec3b pixel = img.at<Vec3b>(row, width - 1);
@@ -155,31 +162,12 @@ Mat applyZoomInLinear(Mat &img) {
     result.at<Vec3b>(y, 2 * width - 2) = pixel;
   }
 
-  for (int row = 0; row < 2*height - 1; row++) {
-    int y = 2 * row;
+  // Clona os pixels na borda horizontal direita.
+  for (int col = 0; col < 2 * width; col++) {
 
-    for (int col = 0; col < width; col++) {
-      int x = 2 * col;
-
-      Vec3b pixel = result.at<Vec3b>(row, col);
-      Vec3b nextPixel = result.at<Vec3b>(row + 1, col);
-      Vec3b meanPixel = pixel / 2 + nextPixel / 2;
-
-      result.at<Vec3b>(y + 1, x) = meanPixel;
-
-      pixel = img.at<Vec3b>(row, col + 1);
-      nextPixel = img.at<Vec3b>(row + 1, col + 1);
-      meanPixel = pixel / 2 + nextPixel / 2;
-
-      result.at<Vec3b>(y + 1, x + 1) = meanPixel;
-    }
+    Vec3b pixel = result.at<Vec3b>(height * 2 - 2, col);
+    result.at<Vec3b>(height * 2 - 1, col) = pixel;
   }
-//
-//  // Borda horizontal inferior.
-//  for (int col = 0; col < width * 2; col++) {
-//    result.at<Vec3b>(height * 2 - 1, col) = result.at<Vec3b>(height * 2 - 2,
-//        col);
-//  }
 
   return result;
 }
@@ -213,12 +201,14 @@ int main(int argc, char** argv) {
 
   namedWindow("ZoomIn", WINDOW_AUTOSIZE);
   imshow("ZoomIn", zoomIn);
+  imwrite("zoomin.jpg", zoomIn);
 
   namedWindow("ZoomOut", WINDOW_AUTOSIZE);
   imshow("ZoomOut", zoomOut);
 
   namedWindow("ZoomIn Linear", WINDOW_AUTOSIZE);
   imshow("ZoomIn Linear", zoomInLinear);
+  imwrite("zoominlinear.jpg", zoomInLinear);
 
   waitKey(0);
 

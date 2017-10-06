@@ -35,9 +35,9 @@ int main(int argc, char** argv) {
   int pdf[256];
   std::fill_n(pdf, 256, 0);
 
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width; j++) {
-      int index = image_hsv.at<Vec3b>(i, j)[2];
+  for (int row = 0; row < height; row++) {
+    for (int col = 0; col < width; col++) {
+      int index = image_hsv.at<Vec3b>(row, col)[2];
       pdf[index]++;
     }
   }
@@ -61,11 +61,11 @@ int main(int argc, char** argv) {
   result = image_hsv.clone();
 
   // A nova cor é mapeada pelo valor da CDF da cor original.
-  for (int i = 0; i < height; i++) {
-    for (int j = 0; j < width; j++) {
-      int index = result.at<Vec3b>(i, j)[2];
+  for (int row = 0; row < height; row++) {
+    for (int col = 0; col < width; col++) {
+      int index = result.at<Vec3b>(row, col)[2];
 
-      result.at<Vec3b>(i, j)[2] = cdf[index];
+      result.at<Vec3b>(row, col)[2] = cdf[index];
     }
   }
 
