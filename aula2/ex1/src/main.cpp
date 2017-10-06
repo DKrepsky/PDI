@@ -40,18 +40,20 @@ Mat applyZoomIn(Mat &img) {
 
   result.create(img.size().width * 2, img.size().height * 2, img.type());
 
-  for (int i = 0; i < img.size().width; i++) {
-    for (int j = 0; j < img.size().height; j++) {
+  for (int row = 0; row < img.size().height; row++) {
+    // y é o indice da linha na nova imagem.
+    int y = 2 * row;
 
-      Vec3b val = img.at<Vec3b>(i, j);
+    for (int col = 0; col < img.size().width; col++) {
+      // x é o indice da coluna na nova imagem.
+      int x = 2 * col;
 
-      int x = 2 * i;
-      int y = 2 * j;
+      Vec3b val = img.at<Vec3b>(row, col);
 
-      result.at<Vec3b>(x, y) = val;
-      result.at<Vec3b>(x + 1, y) = val;
-      result.at<Vec3b>(x, y + 1) = val;
-      result.at<Vec3b>(x + 1, y + 1) = val;
+      result.at<Vec3b>(y, x) = val;
+      result.at<Vec3b>(y + 1, x) = val;
+      result.at<Vec3b>(y, x + 1) = val;
+      result.at<Vec3b>(y + 1, x + 1) = val;
     }
   }
 
@@ -84,13 +86,14 @@ Mat applyZoomOut(Mat &img) {
 
   result.create(img.size().width / 2, img.size().height / 2, img.type());
 
-  for (int i = 0; i < result.size().width; i++) {
-    for (int j = 0; j < result.size().height; j++) {
+  for (int row = 0; row < result.size().height; row++) {
+    int y = 2 * row;
 
-      int x = 2 * i;
-      int y = 2 * j;
+    for (int col = 0; col < result.size().width; col++) {
 
-      result.at<Vec3b>(i, j) = img.at<Vec3b>(x, y);
+      int x = 2 * col;
+
+      result.at<Vec3b>(row, col) = img.at<Vec3b>(y, x);
     }
   }
 
@@ -122,72 +125,61 @@ Mat applyZoomOut(Mat &img) {
 Mat applyZoomInLinear(Mat &img) {
   Mat result;
 
-  result.create(img.size().width * 2, img.size().height * 2, img.type());
+  int width = img.size().width;
+  int height = img.size().height;
 
-  for (int i = 0; i < img.size().width; i++) {
-    for (int j = 0; j < img.size().height; j++) {
+  result.create(height * 2, width * 2, img.type());
 
-      Vec3b mean;
+  // Horizontal
+  for (int row = 0; row < height - 1; row++) {
+    int y = 2 * row;
 
-      mean = img.at<Vec3b>(i, j) / 4;
-      mean += img.at<Vec3b>(i + 1, j) / 4;
-      mean += img.at<Vec3b>(i, j + 1) / 4;
-      mean += img.at<Vec3b>(i + 1, j + 1) / 4;
+    for (int col = 0; col < width - 1; col++) {
+      int x = 2 * col;
 
-      int x = 2 * i;
-      int y = 2 * j;
+      Vec3b pixel = img.at<Vec3b>(row, col);
+      Vec3b nextPixel = img.at<Vec3b>(row, col + 1);
+      Vec3b meanPixel = pixel / 2 + nextPixel / 2;
 
-      result.at<Vec3b>(x, y) = mean;
-      result.at<Vec3b>(x + 1, y) = mean;
-      result.at<Vec3b>(x, y + 1) = mean;
-      result.at<Vec3b>(x + 1, y + 1) = mean;
-
+      result.at<Vec3b>(y, x) = pixel;
+      result.at<Vec3b>(y, x + 1) = meanPixel;
     }
   }
 
-  return result;
-}
+  // Borda vertical direita.
+  for (int row = 0; row < height; row++) {
+    int y = 2 * row;
+    Vec3b pixel = img.at<Vec3b>(row, width - 1);
 
-/*
- * Reduz uma imagem em 4x.
- *
- * A decimação é realizada com base na média dos 2x2 pixels da imagem original.
- *
- * Ex:
- *
- *          Original
- * -------------------------
- * | 135 | 122 | 175 | 132 |          Com Zoom Out
- * -------------------------          -------------
- * | 155 | 145 | 179 | 163 |          | 139 | 162 |
- * -------------------------    ->    -------------
- * | 154 | 122 | 165 | 188 |          | 138 | 177 |
- * -------------------------          -------------
- * | 165 | 112 | 198 | 158 |                    4x4
- * -------------------------
- *                       8x8
- */
-Mat applyZoomOutLinear(Mat &img) {
-  Mat result;
+    result.at<Vec3b>(y, 2 * width - 1) = pixel;
+    result.at<Vec3b>(y, 2 * width - 2) = pixel;
+  }
 
-  result.create(img.size().width / 2, img.size().height / 2, img.type());
+  for (int row = 0; row < 2*height - 1; row++) {
+    int y = 2 * row;
 
-  for (int i = 0; i < result.size().width; i++) {
-    for (int j = 0; j < result.size().height; j++) {
+    for (int col = 0; col < width; col++) {
+      int x = 2 * col;
 
-      int x = 2 * i;
-      int y = 2 * j;
+      Vec3b pixel = result.at<Vec3b>(row, col);
+      Vec3b nextPixel = result.at<Vec3b>(row + 1, col);
+      Vec3b meanPixel = pixel / 2 + nextPixel / 2;
 
-      Vec3b mean;
+      result.at<Vec3b>(y + 1, x) = meanPixel;
 
-      mean = img.at<Vec3b>(x, y) / 4;
-      mean += img.at<Vec3b>(x + 1, y) / 4;
-      mean += img.at<Vec3b>(x, y + 1) / 4;
-      mean += img.at<Vec3b>(x + 1, y + 1) / 4;
+      pixel = img.at<Vec3b>(row, col + 1);
+      nextPixel = img.at<Vec3b>(row + 1, col + 1);
+      meanPixel = pixel / 2 + nextPixel / 2;
 
-      result.at<Vec3b>(i, j) = mean;
+      result.at<Vec3b>(y + 1, x + 1) = meanPixel;
     }
   }
+//
+//  // Borda horizontal inferior.
+//  for (int col = 0; col < width * 2; col++) {
+//    result.at<Vec3b>(height * 2 - 1, col) = result.at<Vec3b>(height * 2 - 2,
+//        col);
+//  }
 
   return result;
 }
@@ -215,8 +207,6 @@ int main(int argc, char** argv) {
 
   Mat zoomInLinear = applyZoomInLinear(image);
 
-  Mat zoomOutLinear = applyZoomOutLinear(image);
-
 // Apresenta a imagem original, ampliada e a reduzida.
   namedWindow("Imagem Original", WINDOW_AUTOSIZE);
   imshow("Imagem Original", image);
@@ -229,9 +219,6 @@ int main(int argc, char** argv) {
 
   namedWindow("ZoomIn Linear", WINDOW_AUTOSIZE);
   imshow("ZoomIn Linear", zoomInLinear);
-
-  namedWindow("ZoomOut Linear", WINDOW_AUTOSIZE);
-  imshow("ZoomOut Linear", zoomOutLinear);
 
   waitKey(0);
 
