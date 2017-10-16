@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     } else if (i > H) {
       table[i] = 255;
     } else {
-      table[i] = (H / L) * (i - L);
+      table[i] = (255 / (H - L)) * (i - L);
     }
   }
 
