@@ -8,7 +8,6 @@ using namespace cv;
 
 void applyMedia(Mat &img) {
   Mat media;
-//  media.create(img.size(), img.type());
 
   Mat kmedia = Mat::ones(3, 3, CV_32F) * (1.0 / 9.0);
 
@@ -21,7 +20,6 @@ void applyMedia(Mat &img) {
 
 void applyMediana(Mat &img) {
   Mat mediana;
-//  mediana.create(img.size(), img.type());
 
   medianBlur(img, mediana, 3);
 
@@ -31,7 +29,13 @@ void applyMediana(Mat &img) {
 }
 
 void applySobel(Mat &img) {
+  Mat sobel;
 
+  Sobel(img, sobel, img.depth(), 1, 1);
+
+  namedWindow("Filtro Sobel", WINDOW_AUTOSIZE);
+  imshow("Filtro Sobel", sobel);
+  imwrite("sobel.png", sobel);
 }
 
 int main(int argc, char** argv) {

@@ -8,30 +8,28 @@
 #include <opencv2/opencv.hpp>
 
 using namespace cv;
-
-int numOfHoles(Mat &img) {
-
-
-  return 0;
-}
+using namespace std;
 
 int main(int argc, char** argv) {
   Mat image;
-  image = imread("4.png", IMREAD_COLOR);
+  image = imread("6.png", IMREAD_GRAYSCALE);
 
-  int holes = numOfHoles(image);
+  threshold(image, image, 0, 255, THRESH_BINARY);
 
-  switch (holes) {
+  vector<vector<Point> > contours;
+  findContours(image, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
+
+  switch (contours.size()) {
   case 4:
-    std::cout << "Tipo: B" << std::endl;
+    cout << "Tipo: B" << endl;
     break;
 
-  case 5:
-    std::cout << "Tipo: A" << std::endl;
+  case 6:
+    cout << "Tipo: A" << endl;
     break;
 
   default:
-    std::cout << "Tipo: R" << std::endl;
+    cout << "Tipo: R" << endl;
     break;
   }
 
