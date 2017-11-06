@@ -16,12 +16,12 @@ int main(int argc, char** argv) {
   namedWindow("Imagem Original", WINDOW_AUTOSIZE);
   imshow("Imagem Original", image);
 
-  Mat kernel = Mat::ones(50, 50, CV_8UC1);
+  Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(50, 50));
 
   Mat res;
   morphologyEx(image, res, MORPH_TOPHAT, kernel);
 
-  threshold(res, res, 50, 255, THRESH_BINARY);
+  threshold(res, res, 0, 255, THRESH_BINARY | THRESH_OTSU);
 
   namedWindow("Imagem Final", WINDOW_AUTOSIZE);
   imshow("Imagem Final", res);
