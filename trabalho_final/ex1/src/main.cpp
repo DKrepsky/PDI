@@ -25,7 +25,7 @@ void abs_diff(Mat &base, Mat &frame, Mat &out) {
 
 			if (diff > THRESHOLD) {
 				if (out.at<uchar>(row, col) < 255)
-					out.at<uchar>(row, col) = out.at<uchar>(row, col) + 1;
+					out.at<uchar>(row, col) = out.at<uchar>(row, col) + 5;
 			}
 		}
 	}
@@ -42,7 +42,7 @@ void pos_diff(Mat &base, Mat &frame, Mat &out) {
 
 			if (diff > THRESHOLD) {
 				if (out.at<uchar>(row, col) < 255)
-					out.at<uchar>(row, col) = out.at<uchar>(row, col) + 1.0;
+					out.at<uchar>(row, col) = out.at<uchar>(row, col) + 5;
 			}
 		}
 	}
@@ -59,7 +59,7 @@ void neg_diff(Mat &base, Mat &frame, Mat &out) {
 
 			if (diff < -THRESHOLD) {
 				if (out.at<uchar>(row, col) < 255)
-					out.at<uchar>(row, col) = out.at<uchar>(row, col) + 1.0;
+					out.at<uchar>(row, col) = out.at<uchar>(row, col) + 5;
 			}
 		}
 	}
@@ -85,7 +85,7 @@ void diff_diff(Mat &base, Mat &frame, Mat &out) {
 
 int main(int argc, char** argv) {
 
-	VideoCapture video("1.mp4");
+	VideoCapture video("2.mp4");
 
 	if (!video.isOpened()) {
 		cout << "Nao foi possivel abrir o video" << endl;
@@ -112,6 +112,8 @@ int main(int argc, char** argv) {
 		resize(frame, frame, Size(500, 500));
 		cvtColor(frame, frame, CV_BGR2GRAY);
 
+		medianBlur(frame, frame, 5);
+
 		frame.convertTo(frame, CV_32F, 1.0 / 255.0);
 
 		add(base, frame / 10.0, base);
@@ -136,10 +138,17 @@ int main(int argc, char** argv) {
 		resize(frame, frame, Size(500, 500));
 		cvtColor(frame, gray, COLOR_BGR2GRAY);
 
+		medianBlur(frame, frame, 5);
+
 		abs_diff(base, gray, abs);
 		pos_diff(base, gray, pos);
 		neg_diff(base, gray, neg);
 		diff_diff(base, gray, differece);
+
+		Mat kern = Mat::ones(3, 3, CV_8UC1);
+		morphologyEx(differece, differece, MORPH_OPEN, kern);
+		morphologyEx(differece, differece, MORPH_CLOSE, kern);
+
 		imshow("Original", frame);
 		imshow("Abs Diff", abs);
 		imshow("Pos Diff", pos);
